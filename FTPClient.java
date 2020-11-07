@@ -17,7 +17,7 @@ class FTPClient {
         String statusCode;
         boolean clientgo = true;
 
-        System.out.println("Welcome to the simple FTP App   \n     Commands  \nconnect servername port# connects to a specified server \nlist: lists files on server \nget: fileName.txt downloads that text file to your current directory \nstor: fileName.txt Stores the file on the server \nclose terminates the connection to the server");
+        System.out.println("Welcome to the simple FTP App   \n     Commands  \nconnect servername port# connects to a specified server \nlist: lists files on server \nretr: fileName.txt downloads that text file to your current directory \nstor: fileName.txt Stores the file on the server \nclose terminates the connection to the server");
         BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
         sentence = inFromUser.readLine();
         StringTokenizer tokens = new StringTokenizer(sentence);
@@ -56,10 +56,43 @@ class FTPClient {
 
                     welcomeData.close();
                     dataSocket.close();
-                    System.out.println("\nWhat would you like to do next: \nget: file.txt ||  stor: file.txt  || close");
+                    System.out.println("\nWhat would you like to do next: \nretr: file.txt ||  stor: file.txt  || close");
 
-                } else if (sentence.startsWith("get: ")) {
-
+                } else if (sentence.startsWith("retr: ")) {
+                    port = port + 2;
+                    StringTokenizer tokenizer = new StringTokenizer(sentence);
+                    tokenizer.nextToken();
+                    if(!tokenizer.hasMoreTokens()) {
+                        System.out.println("No file name included");
+                    }
+                    else {
+                        String fileName = tokenizer.nextToken();
+                        if(!fileName.endsWith(".txt")) {
+                            System.out.println("File must be a .txt file");
+                        }
+                        else {
+                            ServerSocket welcomeData = new ServerSocket(port);
+                            outToServer.writeBytes(port + " " + sentence + "\n");
+                            Socket dataSocket = welcomeData.accept();
+                            DataInputStream inData = new DataInputStream(new BufferedInputStream(dataSocket.getInputStream()));
+                            boolean fileFound = inData.readBoolean();
+                            if(fileFound) {
+                                PrintWriter file = new PrintWriter(new FileWriter(fileName, true));
+                                String dataLine = inData.readUTF();
+                                while (!dataLine.equals("eof")) {
+                                    file.write(dataLine);
+                                    dataLine = inData.readUTF();
+                                }
+                                file.close();
+                                inData.close();
+                                welcomeData.close();
+                                System.out.println("File successfully retrieved");
+                            }
+                            else {
+                                System.out.println("File not found on server");
+                            }
+                        }
+                    }
                 } else {
                     if (sentence.equals("close")) {
                         clientgo = false;
