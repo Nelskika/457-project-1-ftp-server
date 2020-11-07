@@ -90,9 +90,23 @@ import javax.swing.*;
                 }//if list:
 
 
-                if (clientCommand.equals("get:")) {
-
-
+                if (clientCommand.equals("retr:")) {
+			String fileName = tokens.nextToken();
+                	Socket dataSocket = new Socket(connectionSocket.getInetAddress(), port);
+                	DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());
+                	File file = new File(fileName);
+                	if(file.exists()) {
+                    		dataOutToClient.writeBoolean(true);
+                    		Scanner fromFile = new Scanner(file);
+                    		while(fromFile.hasNext()) {
+                        		dataOutToClient.writeUTF(fromFile.nextLine() + "\n");
+                    		}
+                    		dataOutToClient.writeUTF("eof");
+                	}
+                	else {
+                    		dataOutToClient.writeBoolean(false);
+                	}
+                	dataSocket.close();
                 }//main
             }
         }
