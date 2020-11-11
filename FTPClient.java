@@ -1,10 +1,10 @@
-import java.io.*; 
+import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.text.*;
 import java.lang.*;
 import javax.swing.*;
-class FTPClient { 
+class FTPClient {
 
     public static void main(String argv[]) throws Exception {
         String sentence;
@@ -13,7 +13,7 @@ class FTPClient {
         int number = 1;
         boolean notEnd = true;
         int port1 = 6790;
-        int port = 6789;
+        int port = 3734;
         String statusCode;
         boolean clientgo = true;
 
@@ -28,7 +28,7 @@ class FTPClient {
             serverName = tokens.nextToken();
             port1 = Integer.parseInt(tokens.nextToken());
             System.out.println("You are connected to " + serverName);
-            Socket ControlSocket = new Socket(serverName, port1);
+            Socket ControlSocket = new Socket(serverName, port);
             while (isOpen && clientgo) {
 
                 sentence = inFromUser.readLine();
@@ -77,6 +77,15 @@ class FTPClient {
                             DataInputStream inData = new DataInputStream(new BufferedInputStream(dataSocket.getInputStream()));
                             boolean fileFound = inData.readBoolean();
                             if(fileFound) {
+                                File temp;
+                                boolean exists = false;
+                                try{
+                                    temp = File.createTempFile(fileName, ".txt");
+                                    exists = temp.exists();
+                                }catch (Exception e){
+
+                                }
+                                if(!exists){
                                 PrintWriter file = new PrintWriter(new FileWriter(fileName, true));
                                 String dataLine = inData.readUTF();
                                 while (!dataLine.equals("eof")) {
@@ -87,12 +96,60 @@ class FTPClient {
                                 inData.close();
                                 welcomeData.close();
                                 System.out.println("File successfully retrieved");
+                                }else {
+                                    System.out.println("File Already Exists");
+                                }
                             }
                             else {
                                 System.out.println("File not found on server");
                             }
                         }
                     }
+                } else if (sentence.startsWith("stor: ")){
+                    port = port + 2;
+                    StringTokenizer tokenizer = new StringTokenizer(sentence);
+                    tokenizer.nextToken();
+                    String fileName = tokenizer.nextToken();
+                    FileInputStream fileInput = null;
+                    boolean fileExists = true;
+
+                    try {
+                        fileInput = new FileInputStream(fileName);
+                    } catch(FileNotFoundException e) {
+                        fileExists = false;
+                    }
+
+                    try{
+                    if (fileExists){
+                        ServerSocket socket = new ServerSocket(port);
+                        outToServer.writeBytes(port + " " + sentence + "\n");
+                        Socket dataSocket = socket.accept();
+                        DataOutputStream upload = new DataOutputStream
+                                (dataSocket.getOutputStream());
+
+                        System.out.println("File uploading to server...Please wait...\n");
+                        upload.writeBoolean(true);
+
+                        Scanner fromFile = new Scanner(fileInput);
+                        while(fromFile.hasNext()){
+                            upload.writeUTF(fromFile.nextLine() + "\n");
+                        }
+                        upload.writeUTF("eof");
+                        fileInput.close();
+                        fromFile.close();
+                        upload.close();
+                        System.out.print("Uploading file done...");
+                        dataSocket.close();
+                    } else {
+                        System.out.println("File not found in client directory.");
+                    }}catch (java.net.SocketException e){
+                        System.out.println("File Already On Server");
+
+                    }
+
+                    System.out.println("\nWhat would you like to do next: \n" +
+                            "list: || retr: file.txt ||  stor: file.txt  || close");
+
                 } else {
                     if (sentence.equals("close")) {
                         clientgo = false;
