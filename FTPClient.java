@@ -13,7 +13,7 @@ class FTPClient {
         int number = 1;
         boolean notEnd = true;
         int port1 = 6790;
-        int port = 6789;
+        int port = 3734;
         String statusCode;
         boolean clientgo = true;
 
@@ -93,6 +93,47 @@ class FTPClient {
                             }
                         }
                     }
+                } else if (sentence.startsWith("stor: ")){
+                    port = port + 2;
+                    StringTokenizer tokenizer = new StringTokenizer(sentence);
+                    tokenizer.nextToken();
+                    String fileName = tokenizer.nextToken();
+                    FileInputStream fileInput = null;
+                    boolean fileExists = true;
+
+                    try {
+                        fileInput = new FileInputStream(fileName);
+                    } catch(FileNotFoundException e) {
+                        fileExists = false;
+                    }
+
+                    if (fileExists){
+                        ServerSocket socket = new ServerSocket(port);
+                        outToServer.writeBytes(port + " " + sentence + "\n");
+                        Socket dataSocket = socket.accept();
+                        DataOutputStream upload = new DataOutputStream
+                                (dataSocket.getOutputStream());
+
+                        System.out.println("File uploading to server...Please wait...\n");
+                        upload.writeBoolean(true);
+
+                        Scanner fromFile = new Scanner(fileInput);
+                        while(fromFile.hasNext()){
+                            upload.writeUTF(fromFile.nextLine() + "\n");
+                        }
+                        upload.writeUTF("eof");
+
+                        fileInput.close();
+                        fromFile.close();
+                        upload.close();
+                        System.out.print("Uploading file done...");
+                    } else {
+                        System.out.println("File not found in client directory.");
+                    }
+
+                    System.out.println("\nWhat would you like to do next: \n" +
+                            "list: || retr: file.txt ||  stor: file.txt  || close");
+
                 } else {
                     if (sentence.equals("close")) {
                         clientgo = false;
