@@ -85,7 +85,7 @@ class FTPClient {
                                 }catch (Exception e){
 
                                 }
-                                if(!exists){
+                                if(exists){
                                 PrintWriter file = new PrintWriter(new FileWriter(fileName, true));
                                 String dataLine = inData.readUTF();
                                 while (!dataLine.equals("eof")) {
