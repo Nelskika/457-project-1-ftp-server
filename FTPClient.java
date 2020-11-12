@@ -80,12 +80,12 @@ class FTPClient {
                                 File temp;
                                 boolean exists = false;
                                 try{
-                                    temp = File.createTempFile(fileName, ".txt");
+                                    temp = new File(System.getProperty("user.dir") + "\\"+ fileName);
                                     exists = temp.exists();
                                 }catch (Exception e){
 
                                 }
-                                if(exists){
+                                if(!exists){
                                 PrintWriter file = new PrintWriter(new FileWriter(fileName, true));
                                 String dataLine = inData.readUTF();
                                 while (!dataLine.equals("eof")) {
