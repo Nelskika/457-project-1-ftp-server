@@ -35,8 +35,8 @@ public class ftpserver extends Thread {
         String clientCommand;
         byte[] data;
         String frstln;
-
-        while (true) {
+        boolean terminate = false;
+        while (!terminate) {
             if (count == 1)
                 System.out.println("User connected" + connectionSocket.getInetAddress());
             count++;
@@ -134,6 +134,11 @@ public class ftpserver extends Thread {
 
                 uploadingFile.close();
             }//main
+        if(clientCommand.equals("close")){
+            System.out.println("User " + connectionSocket.getInetAddress() + " has disconnected.");
+            this.connectionSocket.close();
+            terminate = true;
+        }
         }
     }
 }

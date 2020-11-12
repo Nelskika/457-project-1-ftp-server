@@ -152,11 +152,13 @@ class FTPClient {
 
                 } else {
                     if (sentence.equals("close")) {
-                        clientgo = false;
+                        outToServer.writeBytes(port + " close " + "\n");
+                        ControlSocket.close();
+                        System.out.println("You have disconnected.");
+                    }else {
+                        System.out.print("No server exists with that name or server not listening on that port try again");
                     }
-                    System.out.print("No server exists with that name or server not listening on that port try agian");
-
-                }
+                    }
             }
         }
     }
